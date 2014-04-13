@@ -9,8 +9,8 @@ class Handler
   def on_events(events)
     events.each do |event|
       event.keys.each { |k| event[k.to_sym] = event.delete(k) }
-      $stdout.write("%<topic>-12s %<type>-12s %<url>s %<t>s\n" % event)
-      $stdout.flush
+      $stderr.write("%<topic>-12s %<type>-12s %<url>s %<t>s\n" % event)
+      $stderr.flush
     end
   end
 end
