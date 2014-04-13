@@ -5,3 +5,9 @@ ruby '2.1.1'
 gem 'foreman'
 gem 'unicorn'
 gem 'sinatra'
+gem 'pry'
+gem 'pry-nav'
+
+gem 'routemaster-client', require: false, 
+  git: 'git://github.com/HouseTrip/routemaster_client',
+  branch: 'prototype'
