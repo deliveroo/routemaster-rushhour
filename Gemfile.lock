@@ -1,6 +1,6 @@
 GIT
   remote: git://github.com/HouseTrip/routemaster_client
-  revision: 582f9a9e8ca206492080dd37532fc19403f3da89
+  revision: 706a9afd0df3acc45594d8b6cc2677bd826507cb
   branch: prototype
   specs:
     routemaster-client (0.0.1)

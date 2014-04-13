@@ -8,6 +8,6 @@ gem 'sinatra'
 gem 'pry'
 gem 'pry-nav'
 
-gem 'routemaster-client', require: false, 
+gem 'routemaster-client', 
   git: 'git://github.com/HouseTrip/routemaster_client',
   branch: 'prototype'
