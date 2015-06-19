@@ -1,10 +1,11 @@
 GIT
   remote: git://github.com/HouseTrip/routemaster_client
-  revision: 706a9afd0df3acc45594d8b6cc2677bd826507cb
+  revision: 8c9ee46ecab050236d6f791cb253683995cd8002
   branch: prototype
   specs:
     routemaster-client (0.0.1)
       faraday
+      net-http-persistent
       sinatra
 
 GEM
@@ -20,6 +21,7 @@ GEM
     kgio (2.9.2)
     method_source (0.8.2)
     multipart-post (2.0.0)
+    net-http-persistent (2.9.4)
     pry (0.9.12.6)
       coderay (~> 1.0)
       method_source (~> 0.8)
