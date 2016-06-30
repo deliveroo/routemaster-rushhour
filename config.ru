@@ -17,13 +17,9 @@ class Handler
   end
 end
 
-use Rack::Auth::Basic do |username, password|
-  username == ENV['CLIENT_UUID']
-end
-
 use Routemaster::Receiver, {
   path:    '/events',
-  uuid:    'demo',
+  uuid:    ENV.fetch('CLIENT_UUID', 'demo'),
   handler: Handler.new
 }
 
