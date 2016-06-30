@@ -8,4 +8,6 @@ gem 'sinatra'
 gem 'pry'
 gem 'pry-nav'
 
+gem 'dotenv'
+
 gem 'routemaster-client'
