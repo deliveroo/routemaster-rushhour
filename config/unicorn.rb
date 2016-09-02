@@ -1,3 +1,5 @@
+require_relative 'bootstrap'
+
 # This configuration file documents many features of Unicorn
 # that may not be needed for some applications. See
 # http://unicorn.bogomips.org/examples/unicorn.conf.minimal.rb
@@ -6,9 +8,14 @@
 # See http://unicorn.bogomips.org/Unicorn/Configurator.html for complete
 # documentation.
 
+# Adds an address to the existing listener set. May be specified more than once.
+# address may be an Integer port number for a TCP port, an "IP_ADDRESS:PORT" for
+# TCP listeners or a pathname for UNIX domain sockets.
+listen ENV.fetch('PORT')
+
 # Use at least one worker per core if you're on a dedicated server,
 # more will usually help for _short_ waits on databases/caches.
-worker_processes Integer(ENV.fetch('UNICORN_WORKERS', 10))
+worker_processes Integer(ENV.fetch('UNICORN_WORKERS', 1))
 
 # Since Unicorn is never exposed to outside clients, it does not need to
 # run on the standard HTTP port (80), there is no reason to start Unicorn

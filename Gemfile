@@ -10,4 +10,7 @@ gem 'pry-nav'
 
 gem 'dotenv'
 
-gem 'routemaster-client'
+gem 'routemaster-client', git: 'https://github.com/deliveroo/routemaster-client.git', ref: '0a92480'
+
+gem 'sidekiq'
+gem 'hashie'
