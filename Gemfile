@@ -3,7 +3,7 @@ source 'https://rubygems.org'
 ruby '2.3.1'
 
 gem 'foreman'
-gem 'unicorn'
+gem 'puma'
 gem 'sinatra'
 gem 'pry'
 gem 'pry-nav'
