@@ -12,10 +12,8 @@ running on e.g. Heroku).
 Fire up the server with:
 
 ```
-$ foreman start -m web=1,worker=5
+$ foreman start
 ```
-
-`worker=5` controls the maximum number of event-sending threads you can run.
 
 Run a console:
 
