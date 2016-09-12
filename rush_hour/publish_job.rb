@@ -24,7 +24,7 @@ module RushHour
         callback: "https://#{_hostname}/events",
         uuid:     ENV.fetch('BUS_UUID'),
         timeout:  bm.deadline,
-        max:      100,
+        max:      bm.batch_size,
       )
 
       bm.send_threads.times do |k|
