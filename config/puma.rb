@@ -1,4 +1,5 @@
 #!/usr/bin/env puma
+require_relative 'bootstrap'
 
 port Integer(ENV.fetch('PORT'))
 
