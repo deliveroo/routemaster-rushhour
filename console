@@ -5,4 +5,5 @@ require_relative 'config/bootstrap'
 
 require 'rush_hour/controller'
 require 'pry'
-binding.pry
+
+Pry::CLI.parse_options
