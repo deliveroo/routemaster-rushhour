@@ -33,10 +33,10 @@ module RushHour
         ---------------------------------------------
 
         Events sent:        #{n_sent}/#{@bm.n_events}
-        throughput:         #{_set.throughput_sent}
+        throughput:         #{_set.throughput_sent} e/s
 
         Events received:    #{n_recv}/#{@bm.n_events}
-        throughput:         #{_set.throughput_received}
+        throughput:         #{_set.throughput_received} e/s
 
         Latency:        5%  #{_set.latency(0.05)} µs
                     median  #{_set.latency(0.50)} µs
