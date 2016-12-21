@@ -40,11 +40,11 @@ module RushHour
     end
 
     def throughput_sent
-      _throughput(_key_sent).round(2)
+      _throughput(_key_sent)&.round(2)
     end
 
     def throughput_received
-      _throughput(_key_received).round(2)
+      _throughput(_key_received)&.round(2)
     end
 
     def latency(percentile)
@@ -58,7 +58,7 @@ module RushHour
       count = _redis.zcard(_key_batches)
       return 0 unless count
       position = (percentile * count).to_i
-      _score_for(_key_batches, position).round
+      _score_for(_key_batches, position)&.round
     end
 
     private
