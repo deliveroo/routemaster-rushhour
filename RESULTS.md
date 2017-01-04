@@ -1,190 +1,180 @@
-Benchmarking results, as of deliveroo/routemaster@98b4b95 and deliveroo/routemaster-client@6f7af94.
-Runs from 2016-09-12.
+Benchmarking results, as of deliveroo/routemaster@74b4d6c and deliveroo/routemaster-client@6f7af94.
+Runs from 2016-12-21.
 
-# Throughput lower bound
 
-When running a single delivery thread, the maximum throughput is around 60
-event/s (15 ms/event).
+# Ingestion performance
 
-This can be significanlty improved by:
+We first configure the bus to 1 web server, 1 process, with 1 thread to estimate
+how quickly the bus can ingest events.
 
-- "fixing" batching of events (don't send events 1 at a time when there's a queue)
-- reducing Redis roundtrips in the delivery system (e.g. memoizing queue
-  parameters, like batch size and timeout; currently they're polled at every
-  delivery attempt).
+## Baseline
 
+Using a single sending thread, publishing events in sequence, we get a
+lower-bound throughput that provides a best-case ingestiong latency estimate.
 
 ```
-Server web dynos:   5
-Server watch dynos: 1
+Bus ingestion:      1 dyno, 1 process, 1 thread
+Bus delivery:       n/a
 ---------------------------------------------
 
-Sending threads:    5
+Sending threads:    1
 Batching deadline:  500
 Batch size:         100
 ---------------------------------------------
-
-Events sent:        10000/10000
-throughput:         211.12380950450677
-
-Events received:    10000/10000
-throughput:         58.83165579377264
-
-Latency:        5%  5151451.0 µs
-            median  54216900.0 µs
-               95%  117549426.0 µs
-
-Batch size:     5%  1.0
-            median  1.0
-               95%  1.0
+Events sent:        1000/1000
+throughput:         34.67 e/s
 ```
 
-# Single-topic stress test
+Ramping up the number of sending threads gives us a sense of the ingestion
+capacity of a single ingestion thread:
 
-Witch the existing setup, 4-5 watches are able to handle the throughput of 10
-aggressive publishers.
+```
+Bus ingestion:      1 dyno, 1 process, 1 thread
+Bus delivery:       n/a
+---------------------------------------------
 
-Scaling seems only limited by the Redis throughput; we've observed that a
-sustained 1,000 event/s throughput uses up about 20% of our test Redis instance
-(RedisGreen "development" instance; non-dedicated hardware).
+Sending threads:    10
+Batching deadline:  500
+Batch size:         100
+---------------------------------------------
+Events sent:        1000/1000
+throughput:         42.62 e/s
+```
 
-4 watches: batching suffers.
+Conclusions:
 
-    Server web dynos:   10
-    Server watch dynos: 4
-    ---------------------------------------------
-
-    Sending threads:    10
-    Batching deadline:  500
-    Batch size:         100
-    ---------------------------------------------
-
-    Events sent:        10000/10000
-    throughput:         321.6313967821165
-
-    Events received:    10000/10000
-    throughput:         280.6673337380743
-
-    Latency:        5%  536768.0 µs
-                median  4907780.0 µs
-                   95%  10028135.0 µs
-
-    Batch size:     5%  1.0
-                median  1.0
-                   95%  1.0
+- nominal ingestion latency of 25ms
+- nominal ingestion throughput of ~35 events/second/thread
 
 
-5 watches: batching at 1/3 efficiency.
+## Scaling behaviour
 
-    Server web dynos:   10
-    Server watch dynos: 5
-    ---------------------------------------------
+Single server, multiple threads:
 
-    Sending threads:    10
-    Batching deadline:  500
-    Batch size:         100
-    ---------------------------------------------
+| Sending threads | Ingestion threads | Ingestion throughput |
+|-----------------|-------------------|----------------------|
+| 10              | 1                 | 44 e/s               |
+| 10              | 2                 | 73                   |
+| 10              | 3                 | 75                   |
+| 10              | 4                 | 75                   |
 
-    Events sent:        10000/10000
-    throughput:         338.4237682863899
+Multiple servers, each with 1 process x 3 threads:
 
-    Events received:    10000/10000
-    throughput:         338.922561786854
+| Sending threads | Ingestion procs.  | Ingestion throughput |
+|-----------------|-------------------|----------------------|
+| 10              | 1                 | 38 e/s               |
+| 10              | 2                 | 72                   |
+| 10              | 3                 | 101                  |
+| 10              | 4                 | 130                  |
+| 10              | 5                 | 154                  |
 
-    Latency:        5%  273711.0 µs
-                median  478660.0 µs
-                   95%  567632.0 µs
+Conclusions:
 
-    Batch size:     5%  2.0
-                median  37.0
-                   95%  100.0
+- ingestion scales roughly linearly with the number of ingestion processes.
 
-10 watches: batching at 1/8th efficiency
+# Delivery performance
 
-    Server web dynos:   10
-    Server watch dynos: 10
-    ---------------------------------------------
+We weren't able to saturate a delivery thread with default batching/deadline
+settings, likely because the batch size of 100 creates a x100 ratio between the
+cost of ingestion and that of delivery.
 
-    Sending threads:    10
-    Batching deadline:  500
-    Batch size:         100
-    ---------------------------------------------
+Smaller batch sizes and deadlines do impact the performance of delivery.
 
-    Events sent:        10000/10000
-    throughput:         329.43204531772636
+| Sending threads  | Batch size       | Latency (median) |
+|------------------|------------------|------------------|
+| 5                | 100              | 470ms            | 
+| 5                | 50               | 506ms            |
+| 5                | 10               | 412ms            |
+| 5                | 5                | 2090ms           |
+| 5                | 1                | 17000ms          |
 
-    Events received:    10000/10000
-    throughput:         330.08674316514964
+| Sending threads  | Latency (median) | Obs. batch size
+|------------------|------------------|------------------|
+| 1                | 339ms            | 15               |
+| 2                | 368ms            | 29               |
+| 3                | 396ms            | 44               |
+| 4                | 423ms            | 56               |
+| 5                | 477ms            | 81               |
+| 6                | 491ms            | 89               |
+| 7                | 480ms            | 100              |
+| 8                | 509ms            | 100              |
+| 9                | 577ms            | 100              |
+| 10               | 821ms            | 100              |
 
-    Latency:        5%  242790.0 µs
-                median  490006.0 µs
-                   95%  559307.0 µs
+Conclusions:
 
-    Batch size:     5%  2.0
-                median  14.0
-                   95%  83.0
+- Assuming a standard batch size of 100, provision 1 delivery thread for every 5
+  ingestion thread.
+- Very small batch sizes are strongly discouraged.
 
-# Latency test
 
-With a minimal delivery deadline (1ms), we're consistently around 45ms roundtrip
-time.
 
-    Server web dynos:   10
-    Server watch dynos: 4
-    ---------------------------------------------
+# Performance at scale
 
-    Sending threads:    1
-    Batching deadline:  1
-    Batch size:         100
-    ---------------------------------------------
+Using the lessons above, we provision more resources for the bus, with a 150:50
+ratio between delivery threads and ingestion threads.
 
-    Events sent:        1000/1000
-    throughput:         44.65217429744046
+Using this formation,
 
-    Events received:    1000/1000
-    throughput:         44.661283910084684
+```
+Bus ingestion:      10 servers, 5 processes, 3 threads
+Bus delivery:       10 servers, 1 process,   5 threads
+---------------------------------------------
+Sending threads:    240
+Batching deadline:  500 ms
+Batch size:         100
+---------------------------------------------
+Events sent:        10000/10000
+throughput:         1276.94 e/s
 
-    Latency:        5%  20496.0 µs
-                median  43944.0 µs
-                   95%  81800.0 µs
+Events received:    10000/10000
+throughput:         1023.2 e/s
 
-    Batch size:     5%  1.0
-                median  1.0
-                   95%  1.0
+Latency:        5%  152677.0 µs
+            median  302887.0 µs
+               95%  869030.0 µs
 
-This isn't affected by the number of delivery threads (watches) as the roundtrip
-is essentially single-threaded.
+Batch size:     5%  100
+            median  100
+               95%  100
+```
 
-    Sending threads:    1
-    Batching deadline:  1
-    Batch size:         100
-    ---------------------------------------------
+At 1000 event/s throughput, Redis CPU usage hovered around 5%.
 
-    Events sent:        1000/1000
-    throughput:         45.733061880171235
 
-    Events received:    1000/1000
-    throughput:         45.728084621100976
+# Memory usage
 
-    Latency:        5%  13128.0 µs
-                median  42019.0 µs
-                   95%  176797.0 µs
+At rest: 467K.
 
-    Batch size:     5%  1.0
-                median  1.0
-                   95%  2.0
+| Batch size    | Queued events | Memory usage (MB)|
+|---------------|---------------|------------------|
+| 100           | 10k           | 4.74             |
+| 100           | 20k           | 6.06             |
+| 100           | 30k           | 7.36             |
+| 100           | 40k           | 8.67             |
+| 100           | 50k           | 9.97             |
+| 100           | 60k           | 11.28            |
+| 100           | 70k           | 12.58            |
 
-# Infrastructure usage
 
-Under our most aggressive stress-test, resource usage remained low, opening an
-opportunity for on-dyno concurrency.
+| Batch size    | Queued events | Memory usage (MB)|
+|---------------|---------------|------------------|
+| 50            | 10k           | 4.88             |
+| 50            | 20k           | 6.32             |
+| 50            | 30k           | 7.74             |
+| 50            | 40k           | 10.06            |
+| 50            | 50k           | 11.56            |
+| 50            | 60k           | 13.07            |
+| 50            | 70k           | 13.48            |
 
-The apparently "high" Puma load seems due to threading warmum (low number of
-starting threads) and can be addressed with configuration.
 
-                      avg       max
-    Watch memory:     33.4MB    36.8MB
-          loadavg:    0.42      0.72
+Conclusions:
 
-    Web   memory:     103.1MB   137.3MB
-          loadavg:    0.16      1.86
+- With normal batch sizes (20-200 events), provision 250MB of Redis memory per
+  1M events that might be queued at peak.
+
+
+
+
+
+
