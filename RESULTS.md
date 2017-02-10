@@ -22,7 +22,7 @@ Batching deadline:  500
 Batch size:         100
 ---------------------------------------------
 Events sent:        1000/1000
-throughput:         34.67 e/s
+throughput:         75.83 e/s
 ```
 
 Ramping up the number of sending threads gives us a sense of the ingestion
@@ -37,14 +37,14 @@ Sending threads:    10
 Batching deadline:  500
 Batch size:         100
 ---------------------------------------------
-Events sent:        1000/1000
-throughput:         42.62 e/s
+Events sent:        2000/2000
+throughput:         146.23 e/s
 ```
 
 Conclusions:
 
-- nominal ingestion latency of 25ms
-- nominal ingestion throughput of ~35 events/second/thread
+- nominal ingestion latency of 13ms
+- nominal ingestion throughput of ~150 events/second/thread
 
 
 ## Scaling behaviour
@@ -53,20 +53,20 @@ Single server, multiple threads:
 
 | Sending threads | Ingestion threads | Ingestion throughput |
 |-----------------|-------------------|----------------------|
-| 10              | 1                 | 44 e/s               |
-| 10              | 2                 | 73                   |
-| 10              | 3                 | 75                   |
-| 10              | 4                 | 75                   |
+| 10              | 1                 | 146 e/s              |
+| 10              | 2                 | 190                  |
+| 10              | 3                 | 190                  |
+| 10              | 4                 | 190                  |
 
 Multiple servers, each with 1 process x 3 threads:
 
 | Sending threads | Ingestion procs.  | Ingestion throughput |
 |-----------------|-------------------|----------------------|
-| 10              | 1                 | 38 e/s               |
-| 10              | 2                 | 72                   |
-| 10              | 3                 | 101                  |
-| 10              | 4                 | 130                  |
-| 10              | 5                 | 154                  |
+| 10              | 1                 | 146 e/s              |
+| 10              | 2                 | 347                  |
+| 10              | 3                 | 487                  |
+| 10              | 4                 | 581                  |
+| 10              | 5                 | 657                  |
 
 Conclusions:
 
@@ -125,21 +125,21 @@ Batching deadline:  500 ms
 Batch size:         100
 ---------------------------------------------
 Events sent:        10000/10000
-throughput:         1276.94 e/s
+throughput:         2194.69 e/s
 
 Events received:    10000/10000
-throughput:         1023.2 e/s
+throughput:         1069.73 e/s
 
-Latency:        5%  152677.0 µs
-            median  302887.0 µs
-               95%  869030.0 µs
+Latency:        5%  652277.0 µs
+            median  6092899.0 µs
+               95%  11064143.0 µs
 
 Batch size:     5%  100
             median  100
                95%  100
 ```
 
-At 1000 event/s throughput, Redis CPU usage hovered around 5%.
+At 2200 event/s throughput, Redis CPU usage hovered around 30%.
 
 
 # Memory usage
