@@ -1,6 +1,8 @@
-## Routemaster Rush Hour
+## Routemaster: Rush Hour
 
-A benchmarking tool for Routemaster.
+A benchmarking tool for [`routemaster`](https://github.com/deliveroo/routemaster).
+
+Latest results are in [`RESULTS.md`](https://github.com/deliveroo/routemaster-rushhour/blob/master/RESULTS.md).
 
 ## Configuration
 
